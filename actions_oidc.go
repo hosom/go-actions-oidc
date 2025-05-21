@@ -1,12 +1,13 @@
-package main
+package actions_oidc
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/MicahParks/keyfunc/v3"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -59,45 +60,64 @@ func TokenRequest(aud string) (*http.Request, error) {
 	return req, nil
 }
 
+type GitHubActionsJWTMiddleware struct {
+	jwksCache jwt.Keyfunc
+	audience  string
+}
+
+func (m *GitHubActionsJWTMiddleware) AuthActionsToken() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenStr := c.Request.Header.Get("Authorization")
+		if tokenStr == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+			c.Abort()
+			return
+		}
+
+		// Trim the "Bearer " prefix if present
+		tokenStr = strings.TrimPrefix(tokenStr, "Bearer ")
+
+		token, err := jwt.ParseWithClaims(tokenStr, &ActionsClaims{}, m.jwksCache, jwt.WithAudience(m.audience))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		if claims, ok := token.Claims.(*ActionsClaims); ok && token.Valid {
+			// Token is valid, set claims in context
+			c.Set("claims", claims)
+			c.Next()
+		} else {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+		}
+	}
+}
+
 func main() {
-
-	log.Println("Starting token validation...")
-
-	req, err := TokenRequest("https://my-domain.com")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Failed to get token: %s", resp.Status)
-	}
-
-	var tokenResponse TokenResponse
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
-		log.Fatal(err)
-	}
-
+	// Initialize a new JWKS cache
 	k, err := keyfunc.NewDefault([]string{GitHubWellKnownURL})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	tokenStr := tokenResponse.Value
-
-	token, err := jwt.ParseWithClaims(tokenStr, &ActionsClaims{}, k.Keyfunc)
-	if err != nil {
-		log.Fatal(err)
+	m := GitHubActionsJWTMiddleware{
+		jwksCache: k.Keyfunc,
+		audience:  "AuthorizationMiddleware",
 	}
 
-	if claims, ok := token.Claims.(*ActionsClaims); ok && token.Valid {
-		log.Printf("Token is valid. Claims: %+v\n", claims)
-	} else {
-		log.Println("Token is invalid.")
-	}
+	r := gin.Default()
+
+	r.Group("/api").Use(m.AuthActionsToken()).GET("/test", func(c *gin.Context) {
+		claims, exists := c.Get("claims")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "No claims found"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"claims": claims})
+	})
+
+	r.Run(":8000")
 }
