@@ -61,6 +61,8 @@ func TokenRequest(aud string) (*http.Request, error) {
 
 func main() {
 
+	log.Println("Starting token validation...")
+
 	req, err := TokenRequest("https://my-domain.com")
 	if err != nil {
 		log.Fatal(err)
