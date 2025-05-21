@@ -22,5 +22,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run
+        env:
+          TEST_URL: ${{ vars.TEST_URL }}
         run: |
           go run cmd/example/main.go
