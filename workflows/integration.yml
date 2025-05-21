@@ -1,0 +1,26 @@
+name: "Integration Tests"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ main ]
+  merge_group:
+
+permissions:
+  id-token: write
+  contents: read
+
+  jobs:
+    integration:
+      name: "All Integration Tests"
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+
+        - name: Run
+          run: |
+            go run actions_oidc.go
