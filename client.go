@@ -18,7 +18,10 @@ func TokenRequest(aud string) (*http.Request, error) {
 
 	req.Header.Set("Authorization", "Bearer "+requestToken)
 	if aud != "" {
-		req.URL.Query().Set("audience", aud)
+		// Set the audience parameter in the query string
+		query := req.URL.Query()
+		query.Set("audience", aud)
+		req.URL.RawQuery = query.Encode()
 	}
 	return req, nil
 }
