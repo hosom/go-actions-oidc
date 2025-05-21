@@ -1,5 +1,6 @@
 package actions_oidc
 
+/*
 import (
 	"log"
 	"net/http"
@@ -79,7 +80,7 @@ func (m *GitHubActionsJWTMiddleware) AuthActionsToken() gin.HandlerFunc {
 
 		token, err := jwt.ParseWithClaims(tokenStr, &ActionsClaims{}, m.jwksCache, jwt.WithAudience(m.audience))
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
@@ -104,7 +105,7 @@ func main() {
 
 	m := GitHubActionsJWTMiddleware{
 		jwksCache: k.Keyfunc,
-		audience:  "AuthorizationMiddleware",
+		audience:  "example-audience",
 	}
 
 	r := gin.Default()
@@ -116,8 +117,15 @@ func main() {
 			return
 		}
 
+		if claims.(*ActionsClaims).RepositoryOwner != "hosom" {
+			log.Println("Invalid repository owner")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid repository owner"})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{"claims": claims})
 	})
 
 	r.Run(":8000")
 }
+*/

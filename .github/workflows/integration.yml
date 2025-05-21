@@ -25,4 +25,4 @@ jobs:
         env:
           TEST_URL: ${{ vars.TEST_URL }}
         run: |
-          go run cmd/example/main.go
+          go run cmd/example/client/main.go
