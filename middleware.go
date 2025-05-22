@@ -63,7 +63,7 @@ func NewGinMiddleware(opts ...GinMiddlewareOption) (*GinMiddleware, error) {
 	}
 
 	// Default to at least the GitHub well-known URL if none are provided
-	if m.wellKnownURLs == nil || len(m.wellKnownURLs) == 0 {
+	if len(m.wellKnownURLs) == 0 {
 		m.wellKnownURLs = []string{GitHubWellKnownURL}
 	}
 

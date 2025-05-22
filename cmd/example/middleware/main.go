@@ -25,7 +25,10 @@ func main() {
 			return
 		}
 
-		if claims.(*actions_oidc.ActionsClaims).RepositoryOwner != "hosom" {
+		parsed := claims.(*actions_oidc.ActionsClaims)
+		if parsed.Match(
+			actions_oidc.ActionsClaims{
+				RepositoryOwner: "hosom"}) {
 			log.Println("Invalid repository owner")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid repository owner"})
 			return
