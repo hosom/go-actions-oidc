@@ -1,10 +1,12 @@
-package actions_oidc
+package actions_oidc_test
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/hosom/actions_oidc"
 )
 
 func TestTokenRequest(t *testing.T) {
@@ -70,7 +72,7 @@ func TestTokenRequest(t *testing.T) {
 			tt.setupEnv()
 			defer tt.cleanupEnv()
 
-			req, err := TokenRequest(tt.audience)
+			req, err := actions_oidc.TokenRequest(tt.audience)
 			
 			if tt.wantErr {
 				if err == nil {
@@ -217,7 +219,7 @@ func TestRequestToken(t *testing.T) {
 				defer server.Close()
 			}
 
-			token, err := RequestToken(tt.audience)
+			token, err := actions_oidc.RequestToken(tt.audience)
 
 			if tt.wantErr {
 				if err == nil {
