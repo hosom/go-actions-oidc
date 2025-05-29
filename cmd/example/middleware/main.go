@@ -26,7 +26,7 @@ func main() {
 		}
 
 		parsed := claims.(*actions_oidc.ActionsClaims)
-		if parsed.Match(
+		if !parsed.Match(
 			actions_oidc.ActionsClaims{
 				RepositoryOwner: "hosom"}) {
 			log.Println("Invalid repository owner")
